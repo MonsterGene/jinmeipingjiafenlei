@@ -1,20 +1,25 @@
 var express = require('express');
-var multer = require("multer")
-
-var app = express();
-var upload = multer({dest:"Server/uploads"})
-
-app.use(express.static("dist"))
-
-app.post('/fileUpload',upload.any(),function (req, res) {
-    var jm = require("./jmfile.js")
-    jm(req,res)
-});
 
 
-var server = app.listen(3000, function () {
-  var host = server.address().address;
-  var port = server.address().port;
+proccessArg = process.argv.slice(2).reduce((acc, cur) => {
+    [key, val] = cur.split("=")
+    acc[key] = val
+    return acc
+}, {})
+const config = global.global.appConfig = {}
+config.uploadPath = "uploads"
+config.isServer = !(proccessArg.node_env==="dev")
+if(proccessArg.node_env==="dev"){
+	config.serverPort = 3000
+}else{
+	config.serverPort = 80
+}
 
-  console.log('Example app listening at http://%s:%s', host, port);
-});
+var router = require("./routes/main")
+var app = express()
+app.use(router)
+var server = app.listen(config.serverPort,function(){
+	var host = server.address().address;
+	var port = server.address().port;
+	console.log('Example app listening at http://%s:%s', host, port)
+})
